@@ -1,0 +1,18 @@
+services:
+  kong:
+    build: ..
+    environment:
+      KONG_DATABASE: off
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yaml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_PLUGINS: pre-function,omniplug,post-function
+    volumes:
+      - ./kong.yaml:/kong/declarative/kong.yaml
+    ports:
+      - 8000:8000
+  
+  echo:
+    image: ealen/echo-server

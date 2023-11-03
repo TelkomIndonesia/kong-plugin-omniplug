@@ -9,7 +9,7 @@ import (
 
 var version = "0.1.0"
 var priority = func() int {
-	s := os.Getenv("KONG_PLUGIN_REQENRICH_PRIORITY")
+	s := os.Getenv("KONG_PLUGIN_OMNIPLUG_PRIORITY")
 	i, err := strconv.Atoi(s)
 	if err != nil {
 		return 810
@@ -18,5 +18,5 @@ var priority = func() int {
 }()
 
 func main() {
-	server.StartServer(New, version, priority)
+	server.StartServer(NewConfig, version, priority)
 }

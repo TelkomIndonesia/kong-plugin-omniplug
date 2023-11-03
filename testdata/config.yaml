@@ -1,0 +1,55 @@
+datasources:
+  - id: static_data
+    type: static
+    static: |
+      message:
+        hello: world
+  - id: kong_data
+    type: kong
+    kong:
+      consumer: true
+      request_headers: []
+      request_query_params: []
+  - id: kong_data_explicit
+    type: kong
+    kong:
+      consumer: true
+      request_headers:
+        - x-foo
+      request_query_params:
+        - x_foo
+  - id: mockbin_data
+    type: http
+    # All attributes support go templating with
+    http:
+      url: '{{ env "TEST_SERVER_URL" }}'
+      method: POST
+      query_params:
+        expire_at: "{{ index .kong_data.request_query_params.expire_at 0}}" # Reference previous data source
+      headers:
+        content-type: application/json
+      body: '{"hello": "world"}'
+      timeout: 30s
+      cache-key: "{{ .static_data.message.hello }}"
+      ttl: "{{ index .__self__.response.body.queryString.expire_at 0 }}" # `__self__` can only be used here since `ttl` is used after the HTTP Response is received
+injector:
+  # unfortunately, this is not testable with current SDK, so it is commented outs
+  # context:
+  #   key1:
+  #     subkey1: string1
+  #     subkey2: string2
+  #   key2:
+  #     subkey3: string1
+  #     subkey4: string2
+  headers:
+    hello: "{{ .static_data.message.hello }}"
+    username: "{{ .kong_data.consumer.username }}"
+    foo: "{{ index .kong_data.request_headers.x_foo 0 }}"
+    foo-ex: "{{ index .kong_data_explicit.request_headers.x_foo 0 }}"
+    date: "{{ index .mockbin_data.response.body.startedDateTime 0 }}"
+  query_params:
+    hello: "{{ .static_data.message.hello }}"
+    username: "{{ .kong_data.consumer.username }}"
+    foo: "{{ index .kong_data_explicit.request_query_params.x_foo 0 }}"
+    foo-ex: "{{ index .kong_data_explicit.request_query_params.x_foo 0 }}"
+    date: "{{ index .mockbin_data.response.body.startedDateTime 0 }}"

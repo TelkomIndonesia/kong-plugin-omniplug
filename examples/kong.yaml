@@ -1,0 +1,38 @@
+_format_version: "3.0"
+_transform: true
+services:
+  - host: mockbin.org
+    name: example_service
+    port: 80
+    protocol: http
+    routes:
+      - name: example_route
+        paths:
+          - /
+        strip_path: true
+        plugins:
+          - name: pre-function
+            config:
+              access:
+                - kong.ctx.shared.foo = "bar"
+          - name: omniplug
+            enabled: true
+            config:
+              datasources:
+                - id: kong
+                  type: kong
+                  kong:
+                    context:
+                      - foo
+              injector:
+                context:
+                  omniplug:
+                    foo: baz
+                headers:
+                  foo: "{{ .kong.context.foo }}"
+                query_params:
+                  foo: "{{ .kong.context.foo }}"
+          - name: post-function
+            config:
+              access:
+                - kong.response.set_header("foo", kong.ctx.shared.omniplug.foo)
