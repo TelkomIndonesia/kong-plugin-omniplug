@@ -20,7 +20,7 @@ datasources:
         - x_foo
   - id: mockbin_data
     type: http
-    # All attributes support go templating with
+    # All attributes support go templating with sprig function
     http:
       url: '{{ env "TEST_SERVER_URL" }}'
       method: POST
