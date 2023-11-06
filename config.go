@@ -12,32 +12,28 @@ type Config struct {
 	Injector    configInjector     `json:"injector" yaml:"injector"`
 
 	omniplug *Omniplug
-	mut      sync.Mutex
+	once     sync.Once
+	onceErr  error
 }
 
 func (conf *Config) Init() (err error) {
-	if conf.omniplug != nil {
-		return
-	}
-
-	conf.mut.Lock()
-	defer conf.mut.Unlock()
-	if conf.omniplug == nil {
+	conf.once.Do(func() {
 		v, err := json.Marshal(conf)
 		if err != nil {
-			return err
+			conf.onceErr = err
+			return
 		}
 
 		conf.omniplug = &Omniplug{}
-		if err = json.Unmarshal(v, conf.omniplug); err != nil {
-			return err
+		if conf.onceErr = json.Unmarshal(v, conf.omniplug); conf.onceErr != nil {
+			return
 		}
 
-		if err = conf.omniplug.Init(); err != nil {
-			return err
+		if conf.onceErr = conf.omniplug.Init(); conf.onceErr != nil {
+			return
 		}
-	}
-	return
+	})
+	return conf.onceErr
 }
 
 func (conf *Config) Access(kong *pdk.PDK) {
